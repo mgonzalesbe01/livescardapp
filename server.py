@@ -1,5 +1,5 @@
 # Servidor Backend en Python usando Flask y Mercado Pago SDK
-# Versión FINAL DEPURADA para capturar errores ocultos
+# Versión FINAL: Eliminación de moneda explícita para evitar errores de parámetros
 
 import os
 import json
@@ -8,9 +8,8 @@ from mercadopago import SDK
 from werkzeug.exceptions import BadRequest
 
 # --- CONFIGURACIÓN ---
-# Intenta leer el Access Token de la variable de entorno de Render.
-# Si no la encuentra (localmente), usa el valor por defecto.
-MP_ACCESS_TOKEN = os.environ.get("MP_ACCESS_TOKEN", "APP_USR-1144922300830729-112020-5ea5bc88cad445723e167d84442662b9-3005078586")
+# Asegúrate de que en Render la variable MP_ACCESS_TOKEN tenga tu token de Producción.
+MP_ACCESS_TOKEN = os.environ.get("MP_ACCESS_TOKEN", "TU_TOKEN_DE_PRODUCCION_AQUI")
 mp = SDK(MP_ACCESS_TOKEN)
 
 app = Flask(__name__, static_folder='public')
@@ -23,7 +22,6 @@ def serve_index():
 
 @app.route('/obtener-estados', methods=['GET'])
 def obtener_estados():
-    # Retornamos listas vacías por defecto para esta demo
     return jsonify({'live': [], 'dead': []})
 
 @app.route('/procesar-pago', methods=['POST'])
@@ -42,7 +40,6 @@ def procesar_pago():
     cardholder_email = data.get('cardholderEmail')
     cardholder_name = data.get('cardholderName', 'Usuario Prueba')
     
-    # Separar nombre y apellido para enviarlos por separado (Requisito de MP)
     parts = cardholder_name.split()
     first_name = parts[0] if len(parts) > 0 else "Usuario"
     last_name = " ".join(parts[1:]) if len(parts) > 1 else "Prueba"
@@ -55,7 +52,11 @@ def procesar_pago():
             "installments": int(installments),
             "payment_method_id": payment_method_id,
             "issuer_id": issuer_id,
-            "currency_id": "PEN",
+            
+            # 🚀 CORRECCIÓN: Eliminamos 'currency_id' y 'currency'.
+            # Dejamos que Mercado Pago use la moneda por defecto de tu cuenta (PEN).
+            # Esto evita el error Code 8 "Parameter name is wrong".
+
             "payer": {
                 "email": cardholder_email,
                 "first_name": first_name,
@@ -71,7 +72,6 @@ def procesar_pago():
         api_result = mp.payment().create(payment_data)
         
         # --- ZONA DE DEPURACIÓN ---
-        # Extraemos status HTTP y cuerpo de respuesta
         http_status = api_result.get("status")
         response_data = api_result.get("response", {})
         
@@ -81,11 +81,10 @@ def procesar_pago():
         print(json.dumps(response_data, indent=2)) 
         print("---------------------\n")
         
-        # CASO 1: Error de API (Bad Request, Unauthorized, etc.)
+        # CASO 1: Error de API
         if http_status not in [200, 201]:
             error_message = response_data.get('message', 'Error desconocido de API')
             
-            # Intentar buscar detalles en 'cause'
             if 'cause' in response_data and isinstance(response_data['cause'], list) and len(response_data['cause']) > 0:
                 cause_info = response_data['cause'][0]
                 description = cause_info.get('description', '')
@@ -98,7 +97,7 @@ def procesar_pago():
                 "message": f"Error API MercadoPago: {error_message}"
             }), 400
 
-        # CASO 2: Respuesta Exitosa (La API procesó el pago, ahora vemos si se aprobó)
+        # CASO 2: Respuesta Exitosa (Procesada)
         payment_status = response_data.get('status')
         status_detail = response_data.get('status_detail')
 
@@ -109,7 +108,6 @@ def procesar_pago():
                 "paymentId": response_data.get('id')
             })
         else:
-            # Diccionario de errores
             mensajes_error = {
                 "cc_rejected_insufficient_amount": "Fondos insuficientes.",
                 "cc_rejected_bad_filled_other": "Datos incorrectos.",
