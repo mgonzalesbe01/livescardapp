@@ -1,3 +1,4 @@
 Flask
 mercadopago
 gunicorn
+werkzeug
