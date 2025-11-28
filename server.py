@@ -9,7 +9,7 @@ from werkzeug.exceptions import BadRequest
 # Lee la variable de entorno de Render.
 # Si estás probando localmente y no tienes la variable, puedes poner tu token aquí temporalmente,
 # pero para PRODUCCIÓN en Render, usa la variable de entorno.
-MP_ACCESS_TOKEN = os.environ.get("MP_ACCESS_TOKEN", "TU_TOKEN_DE_PRODUCCION_AQUI")
+MP_ACCESS_TOKEN = os.environ.get("MP_ACCESS_TOKEN", "APP_USR-1144922300830729-112020-5ea5bc88cad445723e167d84442662b9-3005078586")
 
 # Inicializar el SDK
 mp = SDK(MP_ACCESS_TOKEN)
@@ -87,6 +87,10 @@ def procesar_pago():
     except Exception as e:
         print(f"Error procesando el pago: {e}")
         return jsonify({"status": "error", "message": str(e)}), 400
+    
+@app.route('/<path:path>')
+def serve_static(path):
+    return send_from_directory(app.static_folder, path)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

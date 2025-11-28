@@ -2,7 +2,7 @@
 
 // ⚠️ REEMPLAZAR: Coloca aquí tu Public Key de Producción (LIVE)
 // Ejemplo: "APP_USR-12345678-1234-1234-1234-1234567890ab"
-const mp = new MercadoPago("[TU_PUBLIC_KEY_DE_PRODUCCION_AQUI]", {
+const mp = new MercadoPago("APP_USR-ce6ba25b-5958-4a05-80a7-41c1aefcf6b0", {
   locale: "es-PE",
 });
 
