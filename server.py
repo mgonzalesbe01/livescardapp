@@ -9,7 +9,7 @@ from mercadopago import SDK
 from werkzeug.exceptions import BadRequest
 
 # --- CONFIGURACIÓN ---
-MP_ACCESS_TOKEN = os.environ.get("MP_ACCESS_TOKEN", "TU_TOKEN_DE_PRODUCCION_AQUI")
+MP_ACCESS_TOKEN = os.environ.get("MP_ACCESS_TOKEN", "APP_USR-1144922300830729-112020-5ea5bc88cad445723e167d84442662b9-3005078586")
 mp = SDK(MP_ACCESS_TOKEN)
 
 app = Flask(__name__, static_folder='public')
